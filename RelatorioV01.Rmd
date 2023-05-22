@@ -1,0 +1,825 @@
+---
+title: "Análises Danielle"
+author: 'Samuel Martins de Medeiros'
+output:   
+  pdf_document:
+    keep_tex: yes
+  word_document: default
+  html_document:
+    df_print: paged
+    self_contained: no
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(readr)
+library(kableExtra)
+library(knitr)
+library(stringr)
+library(ggplot2)
+```
+
+# Panorama Geral
+
+## Avaliação geral de mortalidade
+
+Tendo em vista a disposição dos dados das gestantes e das não gestantes, será realizada uma análise para ambos os grupos. Em primeiro lugar, será feita uma avaliação geral da frequência absoluta, a fim de verificar a categoria com maior concentração. Na Tabela 1, é possível observar a frequência total e relativa por tipo de mortalidade. Observa-se que a quantidade de observações está predominantemente nas classificações de Homicídio e Acidente automobilístico, mantendo esse padrão para ambos os grupos analisados. Vemos um valor considerável apenas na categoria de suicídio fora as já citadas. Além disso, percebe-se que o comportamento difere entre o grupo de gestantes e o grupo de não gestantes. No grupo gestante, a variável Acidente Automobilístico apresenta uma porcentagem superior à de Homicídios, enquanto no grupo de não gestantes ocorre o contrário.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+# IMPORTACAO DE DADOS -----------------------------------------------------
+
+gest <- read_csv("Obitos_gest_puerp_causas_externas_2011_2020.csv")
+nao_gest <- read_csv("Obitos_nao_gest_puerp_causas_externas_2011_2020.csv")
+gest$data_obito <- as.Date(gest$data_obito, format = "%d/%m/%Y")
+nao_gest$data_obito <- as.Date(nao_gest$data_obito, format = "%d/%m/%Y")
+gest$data_nasc <- as.Date(gest$data_nasc, format = "%d/%m/%Y")
+nao_gest$data_nasc <- as.Date(nao_gest$data_nasc, format = "%d/%m/%Y")
+gest$anos <- -as.numeric(format(gest$data_nasc, "%Y")) + as.numeric(format(gest$data_obito, "%Y"))
+nao_gest$anos <- -as.numeric(format(nao_gest$data_nasc, "%Y")) + as.numeric(format(nao_gest$data_obito, "%Y"))
+# BASE  -------------------------------------------------------------------
+# gest %>% colnames()
+# str(gest)
+#CIDs
+
+automobilisticos <- paste0("V", sprintf("%02d", seq(2, 95)))
+Quedas <- paste0("W", sprintf("%02d", seq(1, 87)))
+Eventos <- paste0("X", sprintf("%02d", seq(4, 37)))
+Envenenamento <-  paste0("X", sprintf("%02d", seq(41, 59)))
+suicidio <- paste0("X", sprintf("%02d", seq(60, 84)))
+homicidio <- c(paste0("X", sprintf("%02d", seq(91, 99))),
+               paste0("Y", sprintf("%02d", seq(0, 9))))
+
+gest <- gest %>% mutate(
+  CID_detalhado = case_when(
+    str_detect(causabas_categoria,paste(automobilisticos, collapse = "|") )  ~ 'Acidente automobilísticos',
+    str_detect(causabas_categoria,paste(Quedas, collapse = "|") )  ~ 'Acidente Quedas/ afogamento/inalação/ corrente elétrica',
+    str_detect(causabas_categoria,paste(Eventos, collapse = "|") )  ~ 'Acidente Eventos ambientais',
+    str_detect(causabas_categoria,paste(Envenenamento, collapse = "|") )  ~ 'Acidente Envenenamento acidental',
+    str_detect(causabas_categoria,paste(suicidio, collapse = "|") )  ~ 'Suicídio',
+    str_detect(causabas_categoria,paste(homicidio, collapse = "|") )  ~ 'Homicídio',
+  TRUE ~ 'Outro'
+  ),
+  CID = substr(causabas_categoria, 1, 3)
+)
+
+nao_gest <- nao_gest %>% mutate(
+  CID_detalhado = case_when(
+    str_detect(causabas_categoria,paste(automobilisticos, collapse = "|") )  ~ 'Acidente automobilísticos',
+    str_detect(causabas_categoria,paste(Quedas, collapse = "|") )  ~ 'Acidente Quedas/ afogamento/inalação/ corrente elétrica',
+    str_detect(causabas_categoria,paste(Eventos, collapse = "|") )  ~ 'Acidente Eventos ambientais',
+    str_detect(causabas_categoria,paste(Envenenamento, collapse = "|") )  ~ 'Acidente Envenenamento acidental',
+    str_detect(causabas_categoria,paste(suicidio, collapse = "|") )  ~ 'Suicídio',
+    str_detect(causabas_categoria,paste(homicidio, collapse = "|") )  ~ 'Homicídio',
+  TRUE ~ 'Outro'
+  ),
+  CID = substr(causabas_categoria, 1, 3)
+)
+# VARIAVEIS DE CARACTERISTICAS
+variaveis_descricao <- c('sexo','raca_cor','escolaridade','ocupacao')
+t1 <- table(gest$CID_detalhado) %>% questionr::freq(cum = FALSE,
+  total = TRUE,
+  na.last = FALSE,
+  valid = FALSE) 
+t2 <- table(nao_gest$CID_detalhado) %>% questionr::freq(cum = FALSE,
+  total = TRUE,
+  na.last = FALSE,
+  valid = FALSE)  
+t3 <- t2
+rownames(t2) <- NULL
+
+t <- cbind(t1,t2) 
+colnames(t) <- c('n (Gest.)',  '% (Gest.)', 'n (Não
+                 )', '% (Não)')
+t  %>% 
+  kable(caption = "Tabela de frequências por tipo de mortalidade", 
+        digits = 2)
+
+```
+
+Uma outra forma de verificar as afirmações citadas, apresentando os mesmos resultados, é por meio da Figura 1, que fornece um apoio visual. Os dados são apresentados da seguinte forma:
+
+- X1: Acidente automobilístico;
+
+- X2: Acidente por envenenamento acidental;
+
+- X3: Acidente por eventos ambientais;
+
+- X4: Acidente por quedas/afogamento/inalação/corrente elétrica;
+
+- X5: Homicídio;
+
+- X6: Outro;
+
+- X7: Suicídio.
+
+Essa definição será adotada novamente ao longo do relatório, quando necessário, para facilitar a referência às legendas dos gráficos e tabelas.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE,fig.cap="Frequência por CID"}
+
+g1 <- table(gest$CID_detalhado)  %>% 
+  as.data.frame() 
+g2<- table(nao_gest$CID_detalhado)  %>% 
+  as.data.frame()
+g1$Var1 <- c('X1','x2','x3','x4','x5','x6','x7')
+g2$Var1 <- c('X1','x2','x3','x4','x5','x6','x7')
+
+
+g1 <- g1 %>% 
+ggplot() +
+  aes(x = Var1, y = Freq) +
+  geom_col(fill = "#46337E") +
+  labs(
+    x = "CID's",
+    y = "Frequência",
+    title = "Mortalidade Gestantes"
+  ) +
+  theme(
+    plot.title = element_text(size = 8L,
+    face = "bold"),
+    axis.title.y = element_text(size = 7L,
+    face = "bold"),
+    axis.title.x = element_text(size = 7L,face = "bold")
+  )
+g2 <- g2 %>% 
+ggplot() +
+  aes(x = Var1, y = Freq) +
+  geom_col(fill = "#46337E") +
+  labs(
+    x = "CID's",
+    y = "Frequência",
+    title = "Mortalidade Não Gestantes"
+  ) +
+  theme(
+    plot.title = element_text(size = 8L,
+    face = "bold"),
+    axis.title.y = element_text(size = 7L,
+    face = "bold"),
+    axis.title.x = element_text(size = 7L,face = "bold")
+  )
+g<- ggpubr::ggarrange(g1,g2,ncol = 1)
+g
+```
+
+
+Outro objetivo da investigação é analisar a distribuição ao longo dos anos. Conforme mostrado na Figura 2, observa-se um comportamento diferente nos anos de 2017 a 2019 para o grupo de gestantes. Enquanto as outras causas CID apresentam uma diminuição na frequência, é possível notar um leve aumento no caso de suicídio. Também é evidente uma estabilidade de 2019 a 2020, em comparação com os demais anos. Em relação ao homicídio, há um pico em 2017, com um valor de 161, correspondendo a 12,30% dos dados totais de homicídio e a 46,80% dos dados totais de morte em 2017.
+
+Já para o grupo de não gestantes, observa-se um comportamento diferente nos anos mencionados anteriormente, com uma queda geral, incluindo na variável homicídio, e uma estabilidade geral. Isso também pode ser atribuído à quantidade absoluta de observações. É visível que a quantidade de mortes em geral para esse grupo tem diminuído de forma pequena ao longo dos anos.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE,fig.cap="Séries Temporáis por CID"}
+# Contagem de casos por ano e CID
+df_counts <- gest  %>% 
+  group_by(ano_obito, CID_detalhado) %>%
+  summarise(count = n())
+df_counts <- df_counts %>% mutate(
+  CIDs = case_when(
+    str_detect(CID_detalhado, 'Acidente automobilísticos')  ~ 'x1',
+    str_detect(CID_detalhado,'Acidente Quedas/ afogamento/inalação/ corrente elétrica' )  ~ 'x4',
+    str_detect(CID_detalhado,'Acidente Eventos ambientais' )  ~ 'x3',
+    str_detect(CID_detalhado, 'Acidente Envenenamento acidental')  ~ 'x2',
+    str_detect(CID_detalhado,  'Suicídio')  ~ 'x7',
+    str_detect(CID_detalhado, 'Homicídio')  ~ 'x5',
+    str_detect(CID_detalhado, 'Outro')  ~'x6'
+  ))
+df_counts2 <- nao_gest  %>% 
+  group_by(ano_obito, CID_detalhado) %>%
+  summarise(count = n())
+df_counts2 <- df_counts2 %>% mutate(
+  CIDs = case_when(
+    str_detect(CID_detalhado, 'Acidente automobilísticos')  ~ 'x1',
+    str_detect(CID_detalhado,'Acidente Quedas/ afogamento/inalação/ corrente elétrica' )  ~ 'x4',
+    str_detect(CID_detalhado,'Acidente Eventos ambientais' )  ~ 'x3',
+    str_detect(CID_detalhado, 'Acidente Envenenamento acidental')  ~ 'x2',
+    str_detect(CID_detalhado,  'Suicídio')  ~ 'x7',
+    str_detect(CID_detalhado, 'Homicídio')  ~ 'x5',
+    str_detect(CID_detalhado, 'Outro')  ~'x6'
+  ))
+g1 <- df_counts %>% ggplot() +
+  aes(x = ano_obito, y = count, colour = CIDs) +
+  geom_line() +
+  scale_color_manual(
+    values = c(x1 = "#CE00FF",
+    x2 = "#B17BA0",
+    x3 = "#000000",
+    x4 = "#00EADF",
+    x5 = "#FA0000",
+    x6 = "#78E200",
+    x7 = "#F3DA00")
+  ) +
+  labs(x = "Ano", y = "Frequência", title = "Gestantes") +
+  theme(
+    plot.title = element_text(size = 8L,
+    face = "bold"),
+    axis.title.y = element_text(size = 7L,
+    face = "bold"),
+    axis.title.x = element_text(size = 7L,face = "bold")
+  )
+# Criação do gráfico de linha
+g2 <-df_counts2 %>% ggplot() +
+  aes(x = ano_obito, y = count, colour = CIDs) +
+  geom_line() +
+  scale_color_manual(
+    values = c(x1 = "#CE00FF",
+    x2 = "#B17BA0",
+    x3 = "#000000",
+    x4 = "#00EADF",
+    x5 = "#FA0000",
+    x6 = "#78E200",
+    x7 = "#F3DA00")
+  )   +
+  theme(
+    plot.title = element_text(size = 8L,
+    face = "bold"),
+    axis.title.y = element_text(size = 7L,
+    face = "bold"),
+    axis.title.x = element_text(size = 7L,face = "bold")
+  ) + 
+  labs(x = "Ano", y = "Frequência", title = "Não Gestantes") 
+# Definir o intervalo do eixo x como 2012 até 2020
+g1 <- g1 + scale_x_continuous(breaks = seq(2011, 2020, by = 1))
+g2 <- g2 + scale_x_continuous(breaks = seq(2011, 2020, by = 1))
+
+# Combinação dos gráficos em uma única figura com uma legenda compartilhada
+combined_plot <- ggpubr::ggarrange(g1,g2,common.legend = TRUE, legend="bottom",ncol = 1,heights = 15)
+combined_plot <- combined_plot + labs(fill = "CID")
+combined_plot
+```
+
+
+
+## Variáveis de Caracterização
+
+Continuando com a avaliação das variáveis de caracterização do objeto de estudo, será feita uma comparação das CID's por sexo, raça, escolaridade e estado civil, nessa ordem, apresentando tabelas de frequência e proporções para ambos, com as devidas observações importantes identificadas, além de uma avaliação do número de mortes totais por ano para as categorias disponíveis de cada uma das variáveis.
+
+### Sexo
+
+Neste tópico, é possível identificar certas inconsistências dentro do próprio banco de dados, como mostrado na Tabela 2. Para o grupo de gestantes, há uma observação com o sexo marcado como masculino, o que é inadequado para esse grupo específico.
+Para a variável sexo, como temos apenas 2 observações que diferem do valor esperado da comparação geral, não serão realizadas as demais análises (tabelas de frequência absoluta e gráficos por ano), uma vez que os resultados seriam os mesmos, com exceção das duas observações mencionadas.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+t1 <- table(gest$CID_detalhado,gest$sexo)
+t2 <- table(nao_gest$CID_detalhado,nao_gest$sexo)
+t1  %>% 
+  kable(caption = "Tabela de frequências (Gestantes)", 
+        digits = 2)
+```
+
+
+
+
+
+### Raça
+
+Para a variável Raça, temos as seguintes possibilidades: Branca, Parda, Preta, Ignorado, Indígena e Amarela. Ao analisar os valores absolutos para a população branca e parda, tanto de forma geral quanto por grupo, observa-se uma diferença significativa entre a terceira maior raça e a segunda maior raça. A diferença é grande, com 53.707 para a raça parda e 8.085 para a raça branca, quando somadas as observações dos grupos, como mostra a Tabela 3.
+
+Inicialmente, para o grupo de gestantes, considerando apenas a tabela de CID x Raça (Tabela 4), percebe-se um comportamento semelhante para todas as raças, exceto para a raça preta, que apresenta um valor um pouco mais elevado em proporção para Acidente por envenenamento acidental em comparação com Acidente por quedas/afogamento/inalação/corrente elétrica. Além disso, há uma concentração de 50% dos valores em Homicídio para a raça preta.
+
+Já para o grupo de não gestantes, o comportamento segue de forma diferente, com valores maiores para acidentes automobilísticos, como mostra a Tabela 5, e uma queda na proporção de homicídios.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+t1 <- table(gest$raca_cor)
+t2 <- table(nao_gest$raca_cor)
+t <- rbind(t1,t2,(t1+t2))
+row.names(t) <- c('Gestante','Não','total')
+t %>% 
+  kable(caption = "Tabela de frequências por Raça", 
+        digits = 2)
+t1 <- gest %>% 
+             mutate(
+  CIDs = case_when(
+    str_detect(CID_detalhado, 'Acidente automobilísticos')  ~ 'x1',
+    str_detect(CID_detalhado,'Acidente Quedas/ afogamento/inalação/ corrente elétrica' )  ~ 'x4',
+    str_detect(CID_detalhado,'Acidente Eventos ambientais' )  ~ 'x3',
+    str_detect(CID_detalhado, 'Acidente Envenenamento acidental')  ~ 'x2',
+    str_detect(CID_detalhado,  'Suicídio')  ~ 'x7',
+    str_detect(CID_detalhado, 'Homicídio')  ~ 'x5',
+    str_detect(CID_detalhado, 'Outro')  ~'x6'
+  )) 
+prop.table(table(t1$CIDs, t1$raca_cor), margin = 2) %>% 
+  kable(caption = "Tabela de proporção de CIDs por Raça (Gestantes)", 
+        digits = 2)
+t1 <- nao_gest %>% 
+             mutate(
+  CIDs = case_when(
+    str_detect(CID_detalhado, 'Acidente automobilísticos')  ~ 'x1',
+    str_detect(CID_detalhado,'Acidente Quedas/ afogamento/inalação/ corrente elétrica' )  ~ 'x4',
+    str_detect(CID_detalhado,'Acidente Eventos ambientais' )  ~ 'x3',
+    str_detect(CID_detalhado, 'Acidente Envenenamento acidental')  ~ 'x2',
+    str_detect(CID_detalhado,  'Suicídio')  ~ 'x7',
+    str_detect(CID_detalhado, 'Homicídio')  ~ 'x5',
+    str_detect(CID_detalhado, 'Outro')  ~'x6'
+  )) 
+prop.table(table(t1$CIDs, t1$raca_cor), margin = 2) %>% 
+  kable(caption = "Tabela de proporção de CIDs por Raça  (Não)", 
+        digits = 2)
+```
+
+
+De forma geral, conforme mostrado na Figura 3, é possível observar uma maior estabilidade para as raças Preta, Ignorado e Indígena ao longo do tempo. A variável raça Branca apresenta uma oscilação maior, como pode ser observado de forma mais acentuada no grupo de gestantes, com um aumento significativo de 2014 para 2015 e uma queda considerável de 2019 para 2020. A mesma variação pode ser observada para a raça Parda, com um aumento acentuado de 2016 para 2017 em ambos os grupos. A partir de 2015, ambos os grupos parecem seguir um comportamento semelhante, enquanto nos anos anteriores é possível observar uma queda significativa de 2012 para 2013 no grupo de gestantes, enquanto no grupo de não gestantes há uma maior estabilidade.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE,fig.cap="Séries Temporáis por Raça"}
+# Contagem de casos por ano e CID
+df_counts <- gest  %>% 
+  group_by(ano_obito,raca_cor) %>%
+  summarise(count = n())
+df_counts2 <- nao_gest  %>% 
+  group_by(ano_obito,raca_cor) %>%
+  summarise(count = n())
+g1 <- df_counts %>% ggplot() +
+  aes(x = ano_obito, y = count, colour =raca_cor ) +
+  geom_line() +
+  scale_color_manual(
+    values = c(
+    Amarela = "#B17BA0",
+    Branca = "#000000",
+    Parda = "#00EADF",
+    Preta = "#FA0000",
+    Ignorado = "#78E200",
+    Indígena = "#F3DA00")
+  ) +
+  labs(x = "Ano", y = "Frequência", title = "Gestantes") +
+  theme(
+    plot.title = element_text(size = 8L,
+    face = "bold"),
+    axis.title.y = element_text(size = 7L,
+    face = "bold"),
+    axis.title.x = element_text(size = 7L,face = "bold")
+  )
+# Criação do gráfico de linha
+g2 <-df_counts2 %>% ggplot() +
+  aes(x = ano_obito, y = count, colour = raca_cor) +
+  geom_line() +
+  scale_color_manual(
+  values = c(
+    Amarela = "#B17BA0",
+    Branca = "#000000",
+    Parda = "#00EADF",
+    Preta = "#FA0000",
+    Ignorado = "#78E200",
+    Indígena = "#F3DA00")
+  )   +
+  theme(
+    plot.title = element_text(size = 8L,
+    face = "bold"),
+    axis.title.y = element_text(size = 7L,
+    face = "bold"),
+    axis.title.x = element_text(size = 7L,face = "bold")
+  ) + 
+  labs(x = "Ano", y = "Frequência", title = "Não Gestantes") 
+# Definir o intervalo do eixo x como 2012 até 2020
+g1 <- g1 + scale_x_continuous(breaks = seq(2011, 2020, by = 1))
+g2 <- g2 + scale_x_continuous(breaks = seq(2011, 2020, by = 1))
+
+# Combinação dos gráficos em uma única figura com uma legenda compartilhada
+combined_plot <- ggpubr::ggarrange(g1,g2,common.legend = TRUE, legend="bottom",ncol = 1,heights = 15)
+combined_plot <- combined_plot + labs(fill = "Raca")
+combined_plot
+```
+
+
+
+Considerando as opções de escolaridade: Fundamental I, Fundamental II, Ignorado, Médio, Sem escolaridade, Superior Completo e Superior Incompleto, observamos um comportamento semelhante nos dois grupos, com uma predominância da escolaridade no nível Fundamental II, seguida pelo nível Médio. A diferença entre os dois níveis é baixa, conforme visto na Tabela 6.
+
+Um fato interessante é evidenciado tanto na Tabela 7 quanto na Tabela 8. Conforme o nível de escolaridade aumenta, há uma redução na proporção de homicídios. Tomando o exemplo do grupo de gestantes, observa-se que 48% dos homicídios ocorrem em indivíduos com escolaridade no nível Fundamental II, enquanto apenas 17% ocorrem em indivíduos com Ensino Superior Completo. Essa porcentagem, que não é observada em homicídios, é distribuída entre as categorias de Suicídio e Acidente automobilístico para pessoas com maior nível de escolaridade.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+t1 <- table(gest$escolaridade %>% 
+              gsub(pattern = 'Fundamental', replacement = 'Fund.') %>% 
+             gsub(pattern = 'incompleto', replacement = 'Incom.') %>% 
+              gsub(pattern = 'completo', replacement = 'Compl.'))
+t2 <- table(nao_gest$escolaridade%>% 
+              gsub(pattern = 'Fundamental', replacement = 'Fund.') %>% 
+             gsub(pattern = 'incompleto', replacement = 'Incom.') %>% 
+              gsub(pattern = 'completo', replacement = 'Compl.'))
+t <- rbind(t1,t2,(t1+t2))
+row.names(t) <- c('Gestante','Não','total')
+t %>% 
+  kable(caption = "Tabela de frequências por Escolaridade", 
+        digits = 2)
+t1 <- gest %>% 
+             mutate(
+  CIDs = case_when(
+    str_detect(CID_detalhado, 'Acidente automobilísticos')  ~ 'x1',
+    str_detect(CID_detalhado,'Acidente Quedas/ afogamento/inalação/ corrente elétrica' )  ~ 'x4',
+    str_detect(CID_detalhado,'Acidente Eventos ambientais' )  ~ 'x3',
+    str_detect(CID_detalhado, 'Acidente Envenenamento acidental')  ~ 'x2',
+    str_detect(CID_detalhado,  'Suicídio')  ~ 'x7',
+    str_detect(CID_detalhado, 'Homicídio')  ~ 'x5',
+    str_detect(CID_detalhado, 'Outro')  ~'x6'
+  )) 
+prop.table(table(t1$CIDs, t1$escolaridade%>% 
+              gsub(pattern = 'Fundamental', replacement = 'Fund.') %>% 
+             gsub(pattern = 'incompleto', replacement = 'Incom.') %>% 
+              gsub(pattern = 'completo', replacement = 'Compl.')), margin = 2) %>% 
+  kable(caption = "Tabela de proporção de CIDs por Escolaridade (Gestantes)", 
+        digits = 2)
+t1 <- nao_gest %>% 
+             mutate(
+  CIDs = case_when(
+    str_detect(CID_detalhado, 'Acidente automobilísticos')  ~ 'x1',
+    str_detect(CID_detalhado,'Acidente Quedas/ afogamento/inalação/ corrente elétrica' )  ~ 'x4',
+    str_detect(CID_detalhado,'Acidente Eventos ambientais' )  ~ 'x3',
+    str_detect(CID_detalhado, 'Acidente Envenenamento acidental')  ~ 'x2',
+    str_detect(CID_detalhado,  'Suicídio')  ~ 'x7',
+    str_detect(CID_detalhado, 'Homicídio')  ~ 'x5',
+    str_detect(CID_detalhado, 'Outro')  ~'x6'
+  )) 
+prop.table(table(t1$CIDs, t1$escolaridade%>% 
+              gsub(pattern = 'Fundamental', replacement = 'Fund.') %>% 
+             gsub(pattern = 'incompleto', replacement = 'Incom.') %>% 
+              gsub(pattern = 'completo', replacement = 'Compl.')), margin = 2) %>% 
+  kable(caption = "Tabela de proporção de CIDs por Escolaridade  (Não)", 
+        digits = 2)
+```
+
+Com relação à mortalidade por escolaridade analisada ao longo dos anos (Figura 4), vamos reduzir os comentários apenas ao grupo de gestantes, pois para o grupo complementar as séries indicam uma maior constância.
+
+No que diz respeito ao grupo de gestantes, observa-se que o número de mortes de 2013 a 2015 apresentou um aumento considerável para o grupo de Ensino Médio, com um pico que não é identificado nas outras categorias. Além disso, há um aumento significativo de 2018 a 2020, que é observado apenas nessa categoria. As variáveis de Ensino Superior Completo, Ensino Superior Incompleto e Sem escolaridade parecem ter um comportamento equilibrado e constante ao longo da janela de tempo total analisada.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE,fig.cap="Séries Temporáis por Escolaridade"}
+# Contagem de casos por ano e CID
+df_counts <- gest  %>% 
+  group_by(ano_obito,escolaridade) %>%
+  summarise(count = n())
+df_counts2 <- nao_gest  %>% 
+  group_by(ano_obito,escolaridade) %>%
+  summarise(count = n())
+g1 <- df_counts  %>%
+ filter(!is.na(escolaridade)) %>% ggplot() +
+  aes(x = ano_obito, y = count, colour =escolaridade ) +
+  geom_line() +
+  scale_color_manual(
+  values = c(`Superior incompleto` = "#CE00FF",
+    `Fundamental II` = "#B17BA0",
+    `Médio` = "#000000",
+    `Ignorado` = "#00EADF",
+    `Fundamental I` = "#FA0000",
+    `Superior completo`= "#78E200",
+    `Sem escolaridade` = "#F3DA00" )
+  ) +
+  labs(x = "Ano", y = "Frequência", title = "Gestantes") +
+  theme(
+    plot.title = element_text(size = 8L,
+    face = "bold"),
+    axis.title.y = element_text(size = 7L,
+    face = "bold"),
+    axis.title.x = element_text(size = 7L,face = "bold")
+  )
+# Criação do gráfico de linha
+g2 <-df_counts2  %>%
+ filter(!is.na(escolaridade)) %>% ggplot() +
+  aes(x = ano_obito, y = count, colour = escolaridade) +
+  geom_line() +
+  scale_color_manual(
+  values = c(`Superior incompleto` = "#CE00FF",
+    `Fundamental II` = "#B17BA0",
+    `Médio` = "#000000",
+    `Ignorado` = "#00EADF",
+    `Fundamental I` = "#FA0000",
+    `Superior completo`= "#78E200",
+    `Sem escolaridade` = "#F3DA00" )
+  )   +
+  theme(
+    plot.title = element_text(size = 8L,
+    face = "bold"),
+    axis.title.y = element_text(size = 7L,
+    face = "bold"),
+    axis.title.x = element_text(size = 7L,face = "bold")
+  ) + 
+  labs(x = "Ano", y = "Frequência", title = "Não Gestantes") 
+# Definir o intervalo do eixo x como 2012 até 2020
+g1 <- g1 + scale_x_continuous(breaks = seq(2011, 2020, by = 1))
+g2 <- g2 + scale_x_continuous(breaks = seq(2011, 2020, by = 1))
+
+# Combinação dos gráficos em uma única figura com uma legenda compartilhada
+combined_plot <- ggpubr::ggarrange(g1,g2,common.legend = TRUE, legend="bottom",ncol = 1,heights = 15)
+combined_plot <- combined_plot + labs(fill = "escolaridade")
+combined_plot
+```
+
+### Estado Civil
+
+Ao comparar os resultados para as categorias: Casado, Solteiro, Ignorado, Separado Judic./Divorciado e Viúvo, observamos um número significativamente maior de indivíduos solteiros, seguido pelos casados, conforme mostrado na Tabela 9.
+
+No grupo de gestantes, é possível notar uma taxa de homicídios muito maior entre os indivíduos solteiros em comparação com o outro grupo, como evidenciado na Tabela 10. Além disso, há um valor elevado de acidentes automobilísticos entre a categoria Casado. Esse mesmo comportamento, em relação à categoria Casado, é observado no grupo de não gestantes, conforme mostrado na Tabela 11, apresentando um comportamento mais equilibrado entre as demais categorias de CID's.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+t1 <- table(gest$est_civil)
+t2 <- table(nao_gest$est_civil)
+t <- rbind(t1,t2,(t1+t2))
+row.names(t) <- c('Gestante','Não','total')
+t %>% 
+  kable(caption = "Tabela de frequências por Estado Civil", 
+        digits = 2)
+t1 <- gest %>% 
+             mutate(
+  CIDs = case_when(
+    str_detect(CID_detalhado, 'Acidente automobilísticos')  ~ 'x1',
+    str_detect(CID_detalhado,'Acidente Quedas/ afogamento/inalação/ corrente elétrica' )  ~ 'x4',
+    str_detect(CID_detalhado,'Acidente Eventos ambientais' )  ~ 'x3',
+    str_detect(CID_detalhado, 'Acidente Envenenamento acidental')  ~ 'x2',
+    str_detect(CID_detalhado,  'Suicídio')  ~ 'x7',
+    str_detect(CID_detalhado, 'Homicídio')  ~ 'x5',
+    str_detect(CID_detalhado, 'Outro')  ~'x6'
+  )) 
+prop.table(table(t1$CIDs, t1$est_civil), margin = 2) %>% 
+  kable(caption = "Tabela de proporção de CIDs por Estado Civil (Gestantes)", 
+        digits = 2)
+t1 <- nao_gest %>% 
+             mutate(
+  CIDs = case_when(
+    str_detect(CID_detalhado, 'Acidente automobilísticos')  ~ 'x1',
+    str_detect(CID_detalhado,'Acidente Quedas/ afogamento/inalação/ corrente elétrica' )  ~ 'x4',
+    str_detect(CID_detalhado,'Acidente Eventos ambientais' )  ~ 'x3',
+    str_detect(CID_detalhado, 'Acidente Envenenamento acidental')  ~ 'x2',
+    str_detect(CID_detalhado,  'Suicídio')  ~ 'x7',
+    str_detect(CID_detalhado, 'Homicídio')  ~ 'x5',
+    str_detect(CID_detalhado, 'Outro')  ~'x6'
+  )) 
+prop.table(table(t1$CIDs, t1$est_civil), margin = 2) %>% 
+  kable(caption = "Tabela de proporção de CIDs por Estado Civil  (Não)", 
+        digits = 2)
+```
+
+Podemos observar na Figura 5 a hipótese já mencionada sobre o número elevado de mortalidade para a categoria Solteiro, além de ser a categoria que apresenta uma maior instabilidade ao longo dos anos, especialmente entre 2012 e 2015. De forma geral, não parece apresentar nenhuma outra variabilidade considerável.
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE,fig.cap="Séries Temporáis por Estado Civil"}
+# Contagem de casos por ano e CID
+df_counts <- gest  %>% 
+  group_by(ano_obito,est_civil) %>%
+  summarise(count = n())
+df_counts2 <- nao_gest  %>% 
+  group_by(ano_obito,est_civil) %>%
+  summarise(count = n())
+g1 <- df_counts  %>%
+ filter(!is.na(est_civil)) %>% ggplot() +
+  aes(x = ano_obito, y = count, colour =est_civil ) +
+  geom_line() +
+  scale_color_manual(
+  values = c(Casado = "#CE00FF",
+    Ignorado = "#78E200",
+    Solteiro= "#000000",
+    `Viúvo` = "#00EADF",
+    `Separado Judic./Divorciado` = "#FA0000" )
+  ) +
+  labs(x = "Ano", y = "Frequência", title = "Gestantes") +
+  theme(
+    plot.title = element_text(size = 8L,
+    face = "bold"),
+    axis.title.y = element_text(size = 7L,
+    face = "bold"),
+    axis.title.x = element_text(size = 7L,face = "bold")
+  )
+# Criação do gráfico de linha
+g2 <-df_counts2  %>%
+ filter(!is.na(est_civil)) %>% ggplot() +
+  aes(x = ano_obito, y = count, colour = est_civil) +
+  geom_line() +
+  scale_color_manual(
+    values = c(Casado = "#CE00FF",
+    Ignorado = "#78E200",
+    Solteiro= "#000000",
+    `Viúvo` = "#00EADF",
+    `Separado Judic./Divorciado` = "#FA0000" )
+  )   +
+  theme(
+    plot.title = element_text(size = 8L,
+    face = "bold"),
+    axis.title.y = element_text(size = 7L,
+    face = "bold"),
+    axis.title.x = element_text(size = 7L,face = "bold")
+  ) + 
+  labs(x = "Ano", y = "Frequência", title = "Não Gestantes") 
+# Definir o intervalo do eixo x como 2012 até 2020
+g1 <- g1 + scale_x_continuous(breaks = seq(2011, 2020, by = 1))
+g2 <- g2 + scale_x_continuous(breaks = seq(2011, 2020, by = 1))
+
+# Combinação dos gráficos em uma única figura com uma legenda compartilhada
+combined_plot <- ggpubr::ggarrange(g1,g2,common.legend = TRUE, legend="bottom",ncol = 1,heights = 15)
+combined_plot <- combined_plot + labs(fill = "Estado Civil")
+combined_plot
+```
+
+## Variáveis de Regionalização
+
+A fim de identificar padrões no perfil de gestantes e não gestantes em relação ao tipo de mortalidade, foi realizada uma análise de caracterização considerando a regionalização dos indivíduos por UF (Unidade Federativa) de residência e ocorrência. Devido ao grande número de UF's presentes, serão apresentados resultados apenas para os 10 estados com o maior número de ocorrências registradas.
+
+### UF's de residência
+
+Conforme apresentado na Tabela 12, os três estados com o maior número de mortalidade são: São Paulo, Minas Gerais e Rio de Janeiro. Esses estados estão localizados na região Sudeste, que também é a região mais populosa do Brasil.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+#PEGAR 10 UFS
+t1 <- table(gest$res_sigla_uf) 
+t2 <- table(nao_gest$res_sigla_uf)
+top_ufs <- rbind(t1, t2, (t1 + t2)) %>% 
+  colSums() %>% 
+  sort( decreasing = TRUE) %>% 
+  names()
+top_ufs <- top_ufs[1:10]
+t1 <- table(gest$res_sigla_uf[gest$res_sigla_uf %in% top_ufs]) 
+t2 <- table(nao_gest$res_sigla_uf[nao_gest$res_sigla_uf %in% top_ufs])
+t <- rbind(t1, t2, (t1 + t2))
+row.names(t) <- c('Gestante','Não','total')
+t %>% 
+  kable(caption = "Tabela de frequências por UF de residência", 
+        digits = 2)
+t1 <- gest %>% 
+             mutate(
+  CIDs = case_when(
+    str_detect(CID_detalhado, 'Acidente automobilísticos')  ~ 'x1',
+    str_detect(CID_detalhado,'Acidente Quedas/ afogamento/inalação/ corrente elétrica' )  ~ 'x4',
+    str_detect(CID_detalhado,'Acidente Eventos ambientais' )  ~ 'x3',
+    str_detect(CID_detalhado, 'Acidente Envenenamento acidental')  ~ 'x2',
+    str_detect(CID_detalhado,  'Suicídio')  ~ 'x7',
+    str_detect(CID_detalhado, 'Homicídio')  ~ 'x5',
+    str_detect(CID_detalhado, 'Outro')  ~'x6'
+  )) 
+prop.table(table(t1$CIDs[gest$res_sigla_uf %in% top_ufs], t1$res_sigla_uf[gest$res_sigla_uf %in% top_ufs]), margin = 2) %>% 
+  kable(caption = "Tabela de proporção de CIDs por UF de residência (Gestantes)", 
+        digits = 2)
+t1 <- nao_gest %>% 
+             mutate(
+  CIDs = case_when(
+    str_detect(CID_detalhado, 'Acidente automobilísticos')  ~ 'x1',
+    str_detect(CID_detalhado,'Acidente Quedas/ afogamento/inalação/ corrente elétrica' )  ~ 'x4',
+    str_detect(CID_detalhado,'Acidente Eventos ambientais' )  ~ 'x3',
+    str_detect(CID_detalhado, 'Acidente Envenenamento acidental')  ~ 'x2',
+    str_detect(CID_detalhado,  'Suicídio')  ~ 'x7',
+    str_detect(CID_detalhado, 'Homicídio')  ~ 'x5',
+    str_detect(CID_detalhado, 'Outro')  ~'x6'
+  )) 
+prop.table(table(t1$CIDs[nao_gest$res_sigla_uf %in% top_ufs], t1$res_sigla_uf[nao_gest$res_sigla_uf %in% top_ufs]), margin = 2) %>% 
+  kable(caption = "Tabela de proporção de CIDs por UF de residência  (Não)", 
+        digits = 2)
+```
+
+
+Vale destacar, de acordo com a Tabela 13 e 14, a concentração de acidentes automobilísticos em Goiás (GO) e Paraná (PR), bem como a taxa de homicídios apresentada nos estados do Nordeste, como Ceará (CE), Pernambuco (PE) e Bahia (BA), e nos estados do Sul, como Santa Catarina (SC) e Paraná (PR).
+
+Para os estados mencionados como tendo o maior índice total, São Paulo (SP) e Minas Gerais (MG), observa-se uma distribuição relativamente equilibrada entre acidentes automobilísticos e homicídios. Já para o Rio de Janeiro (RJ), são observados valores um pouco mais acentuados em acidentes por envenenamento acidental no grupo de gestantes, mas esse padrão não se repete no grupo de não gestantes.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE,fig.cap="Séries Temporáis por UF de Residência"}
+# Contagem de casos por ano e CID
+df_counts <- gest[gest$res_sigla_uf %in% top_ufs,]  %>% 
+  group_by(ano_obito,res_sigla_uf) %>%
+  summarise(count = n())
+df_counts2 <- nao_gest[nao_gest$res_sigla_uf %in% top_ufs,]  %>% 
+  group_by(ano_obito,res_sigla_uf) %>%
+  summarise(count = n())
+g1 <- df_counts  %>%
+ filter(!is.na(res_sigla_uf)) %>% ggplot() +
+  aes(x = ano_obito, y = count, colour =res_sigla_uf ) +
+  geom_line() +
+  scale_fill_viridis_b() +
+  labs(x = "Ano", y = "Frequência", title = "Gestantes") +
+  theme(
+    plot.title = element_text(size = 8L,
+    face = "bold"),
+    axis.title.y = element_text(size = 7L,
+    face = "bold"),
+    axis.title.x = element_text(size = 7L,face = "bold")
+  )
+# Criação do gráfico de linha
+g2 <-df_counts2  %>%
+ filter(!is.na(res_sigla_uf)) %>% ggplot() +
+  aes(x = ano_obito, y = count, colour = res_sigla_uf) +
+  geom_line() +
+  scale_fill_viridis_b()  +
+  theme(
+    plot.title = element_text(size = 8L,
+    face = "bold"),
+    axis.title.y = element_text(size = 7L,
+    face = "bold"),
+    axis.title.x = element_text(size = 7L,face = "bold")
+  ) + 
+  labs(x = "Ano", y = "Frequência", title = "Não Gestantes") 
+# Definir o intervalo do eixo x como 2012 até 2020
+g1 <- g1 + scale_x_continuous(breaks = seq(2011, 2020, by = 1))
+g2 <- g2 + scale_x_continuous(breaks = seq(2011, 2020, by = 1))
+
+# Combinação dos gráficos em uma única figura com uma legenda compartilhada
+combined_plot <- ggpubr::ggarrange(g1,g2,common.legend = TRUE, legend="bottom",ncol = 1,heights = 15)
+combined_plot <- combined_plot + labs(fill = "UF de Residência")
+combined_plot
+```
+
+
+No que diz respeito à Figura 6, podemos observar um equilíbrio no grupo de não gestantes, com uma leve queda no caso da Bahia (BA). No entanto, o mesmo padrão não pode ser evidenciado no grupo de gestantes, onde é observada uma variabilidade maior na maioria dos estados, especialmente em São Paulo (SP) e Paraná (PR). Para São Paulo, que apresenta a maior variabilidade no grupo de gestantes, podemos observar uma redução acentuada de 2012 a 2014, seguida por um crescimento significativo nos períodos seguintes, enquanto no estado do Paraná ocorre um comportamento mais aproximado do constante até o ano de 2016, onde apresenta um queda para 2020 significativa. Ao que tudo indica todos os estados, com excessão de São Paulo, parecem estar apresentando uma tendência a redução de 2019 para 2020.
+
+### UF's de Ocorrência
+
+Conforme observado na Tabela 15, o padrão é semelhante ao das UF's de residência, com os estados de São Paulo (SP), Minas Gerais (MG) e Rio de Janeiro (RJ) concentrando a maior parte das ocorrências.
+
+De forma geral, o comportamento das UF's de ocorrência segue o padrão apresentado nas UF's de residência (Tabelas 16 e 17), tanto para as CID's de homicídio quanto para acidentes automobilísticos, como mencionado anteriormente.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+#PEGAR 10 UFS
+gest$data_obito - gest$data_nasc
+t1 <- table(gest$ocor_sigla_uf) 
+t2 <- table(nao_gest$ocor_sigla_uf)
+top_ufs <- rbind(t1, t2, (t1 + t2)) %>% 
+  colSums() %>% 
+  sort( decreasing = TRUE) %>% 
+  names()
+top_ufs <- top_ufs[1:10]
+t1 <- table(gest$ocor_sigla_uf[gest$ocor_sigla_uf %in% top_ufs]) 
+t2 <- table(nao_gest$ocor_sigla_uf[nao_gest$ocor_sigla_uf %in% top_ufs])
+t <- rbind(t1, t2, (t1 + t2))
+row.names(t) <- c('Gestante','Não','total')
+t %>% 
+  kable(caption = "Tabela de frequências por  UF de Ocorrência", 
+        digits = 2)
+t1 <- gest %>% 
+             mutate(
+  CIDs = case_when(
+    str_detect(CID_detalhado, 'Acidente automobilísticos')  ~ 'x1',
+    str_detect(CID_detalhado,'Acidente Quedas/ afogamento/inalação/ corrente elétrica' )  ~ 'x4',
+    str_detect(CID_detalhado,'Acidente Eventos ambientais' )  ~ 'x3',
+    str_detect(CID_detalhado, 'Acidente Envenenamento acidental')  ~ 'x2',
+    str_detect(CID_detalhado,  'Suicídio')  ~ 'x7',
+    str_detect(CID_detalhado, 'Homicídio')  ~ 'x5',
+    str_detect(CID_detalhado, 'Outro')  ~'x6'
+  )) 
+prop.table(table(t1$CIDs[gest$ocor_sigla_uf %in% top_ufs], t1$ocor_sigla_uf[gest$ocor_sigla_uf %in% top_ufs]), margin = 2) %>% 
+  kable(caption = "Tabela de proporção de CIDs por UF de Ocorrência(Gestantes)", 
+        digits = 2)
+t1 <- nao_gest %>% 
+             mutate(
+  CIDs = case_when(
+    str_detect(CID_detalhado, 'Acidente automobilísticos')  ~ 'x1',
+    str_detect(CID_detalhado,'Acidente Quedas/ afogamento/inalação/ corrente elétrica' )  ~ 'x4',
+    str_detect(CID_detalhado,'Acidente Eventos ambientais' )  ~ 'x3',
+    str_detect(CID_detalhado, 'Acidente Envenenamento acidental')  ~ 'x2',
+    str_detect(CID_detalhado,  'Suicídio')  ~ 'x7',
+    str_detect(CID_detalhado, 'Homicídio')  ~ 'x5',
+    str_detect(CID_detalhado, 'Outro')  ~'x6'
+  )) 
+prop.table(table(t1$CIDs[nao_gest$ocor_sigla_uf %in% top_ufs], t1$ocor_sigla_uf[nao_gest$ocor_sigla_uf %in% top_ufs]), margin = 2) %>% 
+  kable(caption = "Tabela de proporção de CIDs por UF de Ocorrência  (Não)", 
+        digits = 2)
+```
+
+ Esse comportamento parecido com UF's de Residência também é evidenciado no gráfico de tempo apresentado na Figura 7, onde é possível observar a mesma variabilidade mencionada anteriormente para o estado de São Paulo (SP).
+
+```{r echo=FALSE, message=FALSE, warning=FALSE,fig.cap="Séries Temporáis por UF de Ocorrência"}
+# Contagem de casos por ano e CID
+df_counts <- gest[gest$ocor_sigla_uf %in% top_ufs,]  %>% 
+  group_by(ano_obito,ocor_sigla_uf) %>%
+  summarise(count = n())
+df_counts2 <- nao_gest[nao_gest$ocor_sigla_uf %in% top_ufs,]  %>% 
+  group_by(ano_obito,ocor_sigla_uf) %>%
+  summarise(count = n())
+g1 <- df_counts  %>%
+ filter(!is.na(ocor_sigla_uf)) %>% ggplot() +
+  aes(x = ano_obito, y = count, colour =ocor_sigla_uf ) +
+  geom_line() +
+  scale_fill_viridis_b() +
+  labs(x = "Ano", y = "Frequência", title = "Gestantes") +
+  theme(
+    plot.title = element_text(size = 8L,
+    face = "bold"),
+    axis.title.y = element_text(size = 7L,
+    face = "bold"),
+    axis.title.x = element_text(size = 7L,face = "bold")
+  )
+# Criação do gráfico de linha
+g2 <-df_counts2  %>%
+ filter(!is.na(ocor_sigla_uf)) %>% ggplot() +
+  aes(x = ano_obito, y = count, colour = ocor_sigla_uf) +
+  geom_line() +
+  scale_fill_viridis_b()  +
+  theme(
+    plot.title = element_text(size = 8L,
+    face = "bold"),
+    axis.title.y = element_text(size = 7L,
+    face = "bold"),
+    axis.title.x = element_text(size = 7L,face = "bold")
+  ) + 
+  labs(x = "Ano", y = "Frequência", title = "Não Gestantes") 
+# Definir o intervalo do eixo x como 2012 até 2020
+g1 <- g1 + scale_x_continuous(breaks = seq(2011, 2020, by = 1))
+g2 <- g2 + scale_x_continuous(breaks = seq(2011, 2020, by = 1))
+
+# Combinação dos gráficos em uma única figura com uma legenda compartilhada
+combined_plot <- ggpubr::ggarrange(g1,g2,common.legend = TRUE, legend="bottom",ncol = 1,heights = 15)
+combined_plot <- combined_plot + labs(fill = "UF de Ocorrência")
+combined_plot
+```
+
+# Teste de Independência
+
+A análise da interferência das variáveis demográficas no número de mortes de gestantes e não gestantes causadas por fatores externos é de suma importância para compreender os possíveis determinantes desses eventos de morte por fatores externos.
+
+Para realizar essa análise, utilizaremos técnicas estatísticas, como o teste qui-quadrado de independência que nos permitirá avaliar se as variáveis demográficas estão associadas ao número de mortes em cada grupo (gestantes e não gestantes). Caso sejam encontradas associações significativas, será possível identificar quais variáveis demográficas estão mais fortemente relacionadas com a mortalidade materna.
+
+Como exposto anteriormente, a variável sexo não irá ser considerada, devido a praticamente todos os dados (Dentro do esperado), serem de mulheres.
+
+*CONVERSAR SOBRE ESSE TOPICO NA REUNIAO, NAO TEM COMO APLICAR O TESTE QUI QUADRADO DEVIDO AO BAIXO NUMERO DE VALORES ESPERADOS PARA ALGUMAS CATEGORIAS E O TESTE EXATO DE FISHER NAO E VALIDO, SURGIU A SUGESTAO DE REGRESSAO BINOMIAL OU DESCONSIDERAR AS CATEGORIAS COM BAIXO NUMERO DE OBSERVACOES*
+
+
+
