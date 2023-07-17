@@ -39,8 +39,8 @@ for (estado in estados){
       },
       "sql": {
         "sql": {"query":" SELECT ano_obito, DTOBITO, DTNASC, def_sexo, def_raca_cor, def_est_civil, ESC2010, OCUP, res_MUNNOME, res_SIGLA_UF, def_loc_ocor, ocor_MUNNOME, ocor_SIGLA_UF, idade_obito_anos, TPMORTEOCO, def_assist_med, def_necropsia, causabas_capitulo, causabas_categoria, def_circ_obito, def_acid_trab, def_fonte, COUNT(1)',
-                  ' FROM \\"datasus-sim_final_1996-2020_preliminar_2021_2022\\"',
-                  ' WHERE (res_SIGLA_UF = \'',estado,'\' AND (ano_obito >= 2011 AND ano_obito <= 2020) AND (OBITOGRAV = 1 OR OBITOPUERP = 1 OR OBITOPUERP = 2) AND causabas_capitulo = \'XX.  Causas externas de morbidade e mortalidade\') ',
+                  ' FROM \\"datasus-sinasc_final_1996-2020_preliminar_2021_2022\\"',
+                  ' WHERE (res_SIGLA_UF = \'',estado,'\' AND (ano_obito >= 2011 AND ano_obito <= 2021) AND (OBITOGRAV = 1 OR OBITOPUERP = 1 OR OBITOPUERP = 2) AND causabas_capitulo = \'XX.  Causas externas de morbidade e mortalidade\') ',
                   ' GROUP BY ano_obito, DTOBITO, DTNASC, def_sexo, def_raca_cor, def_est_civil, ESC2010, OCUP, res_MUNNOME, res_SIGLA_UF, def_loc_ocor, ocor_MUNNOME, ocor_SIGLA_UF, idade_obito_anos, TPMORTEOCO, def_assist_med, def_necropsia, causabas_capitulo, causabas_categoria, def_circ_obito, def_acid_trab, def_fonte",
                   "fetch_size": 65000}
                   }
@@ -61,8 +61,8 @@ for (estado in estados){
           },
           "sql": {
             "sql": {"query":" SELECT ano_obito, DTOBITO, DTNASC, def_sexo, def_raca_cor, def_est_civil, ESC2010, OCUP, res_MUNNOME, res_SIGLA_UF, def_loc_ocor, ocor_MUNNOME, ocor_SIGLA_UF, idade_obito_anos, TPMORTEOCO, def_assist_med, def_necropsia, causabas_capitulo, causabas_categoria, def_circ_obito, def_acid_trab, def_fonte, COUNT(1)',
-                    ' FROM \\"datasus-sim_final_1996-2020_preliminar_2021_2022\\"',
-                    ' WHERE (res_SIGLA_UF = \'',estado,'\' AND (ano_obito >= 2011 AND ano_obito <= 2020) AND (OBITOGRAV = 1 OR OBITOPUERP = 1 OR OBITOPUERP = 2) AND causabas_capitulo = \'XX.  Causas externas de morbidade e mortalidade\')',
+                    ' FROM \\"datasus-sinasc_final_1996-2020_preliminar_2021_2022\\"',
+                    ' WHERE (res_SIGLA_UF = \'',estado,'\' AND (ano_obito >= 2011 AND ano_obito <= 2021) AND (OBITOGRAV = 1 OR OBITOPUERP = 1 OR OBITOPUERP = 2) AND causabas_capitulo = \'XX.  Causas externas de morbidade e mortalidade\')',
                     ' GROUP BY ano_obito, DTOBITO, DTNASC, def_sexo, def_raca_cor, def_est_civil, ESC2010, OCUP, res_MUNNOME, res_SIGLA_UF, def_loc_ocor, ocor_MUNNOME, ocor_SIGLA_UF, idade_obito_anos, "TPMORTEOCO", def_assist_med, def_necropsia, causabas_capitulo, causabas_categoria, def_circ_obito, def_acid_trab, def_fonte",
                     "fetch_size": 65000, "cursor": "',cursor,'"}
                     }
@@ -156,7 +156,7 @@ for (estado in estados){
       },
       "sql": {
         "sql": {"query":" SELECT ano_obito, DTOBITO, DTNASC, def_sexo, def_raca_cor, def_est_civil, ESC2010, OCUP, res_MUNNOME, res_SIGLA_UF, def_loc_ocor, ocor_MUNNOME, ocor_SIGLA_UF, def_assist_med, def_necropsia, causabas_capitulo, causabas_categoria, def_circ_obito, def_acid_trab, def_fonte, COUNT(1)',
-                  ' FROM \\"datasus-sim_final_1996-2020_preliminar_2021_2022\\"',
+                  ' FROM \\"datasus-sinasc_final_1996-2020_preliminar_2021_2022\\"',
                   ' WHERE (res_SIGLA_UF = \'',estado,'\' AND SEXO = 2 AND (ano_obito >= 2011 AND ano_obito <= 2020) AND idade_obito_anos >= 10 AND idade_obito_anos <= 55 AND NOT (OBITOGRAV = 1 OR OBITOPUERP = 1 OR OBITOPUERP = 2) AND causabas_capitulo = \'XX.  Causas externas de morbidade e mortalidade\') ',
                   ' GROUP BY ano_obito, DTOBITO, DTNASC, def_sexo, def_raca_cor, def_est_civil, ESC2010, OCUP, res_MUNNOME, res_SIGLA_UF, def_loc_ocor, ocor_MUNNOME, ocor_SIGLA_UF, def_assist_med, def_necropsia, causabas_capitulo, causabas_categoria, def_circ_obito, def_acid_trab, def_fonte",
                   "fetch_size": 65000}
@@ -178,8 +178,8 @@ for (estado in estados){
           },
           "sql": {
             "sql": {"query":" SELECT ano_obito, DTOBITO, DTNASC, def_sexo, def_raca_cor, def_est_civil, ESC2010, OCUP, res_MUNNOME, res_SIGLA_UF, def_loc_ocor, ocor_MUNNOME, ocor_SIGLA_UF, def_assist_med, def_necropsia, causabas_capitulo, causabas_categoria, def_circ_obito, def_acid_trab, def_fonte, COUNT(1)',
-                    ' FROM \\"datasus-sim_final_1996-2020_preliminar_2021_2022\\"',
-                    ' WHERE (res_SIGLA_UF = \'',estado,'\' AND SEXO = 2 AND (ano_obito >= 2011 AND ano_obito <= 2020) AND idade_obito_anos >= 10 AND idade_obito_anos <= 55 AND NOT (OBITOGRAV = 1 OR OBITOPUERP = 1 OR OBITOPUERP = 2) AND causabas_capitulo = \'XX.  Causas externas de morbidade e mortalidade\') ',
+                    ' FROM \\"datasus-sinasc_final_1996-2020_preliminar_2021_2022\\"',
+                    ' WHERE (res_SIGLA_UF = \'',estado,'\' AND SEXO = 2 AND (ano_obito >= 2011 AND ano_obito <= 2021) AND idade_obito_anos >= 10 AND idade_obito_anos <= 55 AND NOT (OBITOGRAV = 1 OR OBITOPUERP = 1 OR OBITOPUERP = 2) AND causabas_capitulo = \'XX.  Causas externas de morbidade e mortalidade\') ',
                     ' GROUP BY ano_obito, DTOBITO, DTNASC, def_sexo, def_raca_cor, def_est_civil, ESC2010, OCUP, res_MUNNOME, res_SIGLA_UF, def_loc_ocor, ocor_MUNNOME, ocor_SIGLA_UF, def_assist_med, def_necropsia, causabas_capitulo, causabas_categoria, def_circ_obito, def_acid_trab, def_fonte",
                     "fetch_size": 65000, "cursor": "',cursor,'"}
                     }
@@ -240,7 +240,7 @@ sum(df_obitos_externos_nao_gest_puerp_aux2$obitos[which(df_obitos_externos_nao_g
 nrow(df_obitos_externos_nao_gest_puerp[which(df_obitos_externos_nao_gest_puerp$ano_obito == 2011), ])
 
 ##Exportando os dados 
-write.table(df_obitos_externos_nao_gest_puerp, 'Obitos_nao_gest_puerp_causas_externas_2011_2020.csv', sep = ",", dec = ".", row.names = FALSE)
+write.table(df_obitos_externos_nao_gest_puerp, 'Obitos_nao_gest_puerp_causas_externas_2011_2021.csv', sep = ",", dec = ".", row.names = FALSE)
 
 # wb <- createWorkbook()
 # planilha <- 1
