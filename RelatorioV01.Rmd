@@ -16,7 +16,7 @@ editor_options:
 knitr::opts_chunk$set(echo = TRUE)
 library(dplyr)
 library(readr)
-library(kableExtra)
+
 library(knitr)
 library(stringr)
 library(ggplot2)
